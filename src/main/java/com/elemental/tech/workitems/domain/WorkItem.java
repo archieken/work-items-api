@@ -67,9 +67,10 @@ public class WorkItem {
         this.description = description;
         touch();
     }
-
     public void transitionTo(Status newStatus) {
-        // TODO: enforce transitions (OPEN -> IN_PROGRESS -> DONE, etc.) and decide what to do on invalid transitions...
+        if (!status.canTransitionTo(newStatus)) {
+            throw new InvalidStatusTransitionException(status, newStatus);
+        }
         this.status = newStatus;
         touch();
     }
@@ -110,11 +111,32 @@ public class WorkItem {
         return updatedAt;
     }
 
+    /**
+     * Allowed transitions:
+     * <pre>
+     *   OPEN        -> IN_PROGRESS, CANCELLED
+     *   IN_PROGRESS -> OPEN, DONE, CANCELLED
+     *   DONE        -> (terminal)
+     *   CANCELLED   -> (terminal)
+     * </pre>
+     * Transitioning to the current status is rejected rather than silently ignored.
+     */
     public enum Status {
         OPEN,
         IN_PROGRESS,
         DONE,
-        CANCELLED
+        CANCELLED;
+
+        public boolean canTransitionTo(Status target) {
+            if (target == null) {
+                return false;
+            }
+            return switch (this) {
+                case OPEN -> target == IN_PROGRESS || target == CANCELLED;
+                case IN_PROGRESS -> target == OPEN || target == DONE || target == CANCELLED;
+                case DONE, CANCELLED -> false;
+            };
+        }
     }
 
     public enum Priority {
