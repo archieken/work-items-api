@@ -1,6 +1,7 @@
 package com.elemental.tech.workitems.api.error;
 
 import com.elemental.tech.workitems.domain.InvalidStatusTransitionException;
+import com.elemental.tech.workitems.service.InvalidSortException;
 import com.elemental.tech.workitems.service.StaleWorkItemException;
 import com.elemental.tech.workitems.service.WorkItemNotFoundException;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -21,6 +22,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(InvalidStatusTransitionException.class)
     ProblemDetail handleInvalidTransition(InvalidStatusTransitionException ex) {
         return problem(HttpStatus.CONFLICT, "Invalid status transition", ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidSortException.class)
+    ProblemDetail handleInvalidSort(InvalidSortException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "Invalid sort", ex.getMessage());
     }
 
     @ExceptionHandler(StaleWorkItemException.class)

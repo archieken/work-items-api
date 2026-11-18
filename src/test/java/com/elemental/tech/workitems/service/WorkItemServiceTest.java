@@ -9,8 +9,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.elemental.tech.workitems.api.dto.UpdateStatusRequest.Status.DONE;
@@ -18,6 +25,7 @@ import static com.elemental.tech.workitems.api.dto.UpdateStatusRequest.Status.IN
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -66,6 +74,27 @@ class WorkItemServiceTest {
 
         assertThrows(WorkItemNotFoundException.class,
                 () -> service.updateStatus(42L, new UpdateStatusRequest(IN_PROGRESS, 0L)));
+    }
+
+    @Test
+    void listAddsIdAsTieBreak() {
+        Pageable requested = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable expected = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt").and(Sort.by("id")));
+        Page<WorkItem> page = new PageImpl<>(List.of(itemWithVersion(0)), expected, 1);
+        when(repository.findAll(any(Specification.class), eq(expected))).thenReturn(page);
+
+        var result = service.list(WorkItem.Status.OPEN, null, requested);
+
+        assertEquals(1, result.totalElements());
+        assertEquals("Write docs", result.content().get(0).title());
+    }
+
+    @Test
+    void cantSortByUnknownField() {
+        var pageable = PageRequest.of(0, 10, Sort.by("password"));
+
+        assertThrows(InvalidSortException.class, () -> service.list(null, null, pageable));
+        verify(repository, never()).findAll(any(Specification.class), any(Pageable.class));
     }
 
     private static WorkItem itemWithVersion(long version) {

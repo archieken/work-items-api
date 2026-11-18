@@ -1,5 +1,8 @@
-#TODO: Anything to do here?
 spring:
+  data:
+    web:
+      pageable:
+        max-page-size: 100
   application:
     name: ec-temp-int
   datasource:
