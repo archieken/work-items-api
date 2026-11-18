@@ -22,3 +22,12 @@ spring:
 logging:
   level:
     org.hibernate.SQL: debug
+
+ip-check:
+  base-url: http://ip-api.com
+  timeout: 2s
+  blocked-countries: [CN, ES, US]
+  blocked-providers:
+    AWS: [amazon, aws]
+    GCP: [google]
+    Azure: [microsoft, azure]

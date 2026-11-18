@@ -10,9 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/*
-    TODO: please enhance
- */
 @RestController
 @RequestMapping("/api/work-items")
 public class WorkItemController {
